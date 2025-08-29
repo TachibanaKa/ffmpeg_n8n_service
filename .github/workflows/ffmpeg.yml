@@ -21,7 +21,7 @@ jobs:
           ./scripts/process.sh "${{ github.event.client_payload.input_file }}" "${{ github.event.client_payload.output_file }}"
 
       - name: Upload processed video
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: processed-video
           path: ${{ github.event.client_payload.output_file }}
