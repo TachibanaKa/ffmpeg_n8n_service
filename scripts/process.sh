@@ -1,18 +1,20 @@
 #!/bin/bash
-# FFmpeg 全功能处理脚本
-# 参数：
-# $1 = 输入文件
-# $2 = 输出文件
-INPUT_FILE=$1
-OUTPUT_FILE=$2
+set -e  # 脚本遇到错误立即退出
 
-echo "Processing $INPUT_FILE -> $OUTPUT_FILE ..."
+# 默认值：根目录 test.mp4 → 根目录 output.mp4
+INPUT_FILE=${1:-test.mp4}
+OUTPUT_FILE=${2:-output.mp4}
 
-# 基本转码：720p MP4 H.264
+# 确保输入文件存在
+if [ ! -f "$INPUT_FILE" ]; then
+  echo "❌ Input file $INPUT_FILE does not exist"
+  exit 1
+fi
+
+# 确保输出目录存在
+mkdir -p "$(dirname "$OUTPUT_FILE")"
+
+echo "🚀 Processing $INPUT_FILE -> $OUTPUT_FILE ..."
 ffmpeg -i "$INPUT_FILE" -vf "scale=1280:720" -c:v libx264 -crf 23 -preset fast "$OUTPUT_FILE"
 
-# 可拓展：
-# - 音量调整：-af "volume=1.5"
-# - 水印：-i watermark.png -filter_complex "overlay=10:10"
-# - 拼接多视频
-# - 色彩滤镜：-vf "hue=s=0"
+echo "✅ Done! Output saved to $OUTPUT_FILE"
