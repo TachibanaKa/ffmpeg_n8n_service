@@ -1,0 +1,27 @@
+name: FFmpeg Video Processing
+
+on:
+  workflow_dispatch:   # 手动触发
+  repository_dispatch: # 可由 n8n 调用
+
+jobs:
+  ffmpeg-job:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Install FFmpeg
+        run: sudo apt-get update && sudo apt-get install -y ffmpeg
+
+      - name: Run FFmpeg script
+        run: |
+          chmod +x scripts/process.sh
+          ./scripts/process.sh "${{ github.event.client_payload.input_file }}" "${{ github.event.client_payload.output_file }}"
+
+      - name: Upload processed video
+        uses: actions/upload-artifact@v3
+        with:
+          name: processed-video
+          path: ${{ github.event.client_payload.output_file }}
