@@ -1,31 +1,45 @@
 name: FFmpeg Video Processing (Docker)
 
 on:
-  workflow_dispatch:   # 手动触发
-  repository_dispatch: # 可由 n8n 调用
+  workflow_dispatch:
+    inputs:
+      input_file:
+        description: 'Path to input video'
+        required: false
+        default: 'test.mp4'
+      output_file:
+        description: 'Path for output video'
+        required: false
+        default: 'output.mp4'
+
+  repository_dispatch: # n8n 调用
+    types: [run-ffmpeg]
 
 jobs:
   ffmpeg-job:
     runs-on: ubuntu-latest
     container:
-      image: jrottenberg/ffmpeg:6.0-ubuntu  # 官方 FFmpeg 镜像，也可以换成自定义镜像
+      image: jrottenberg/ffmpeg:6.0-ubuntu  # 使用官方 FFmpeg 镜像
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Debug files
-        run: |
-          echo "Current directory: $(pwd)"
-          ls -R
-
       - name: Run FFmpeg script
         run: |
           chmod +x scripts/process.sh
-          ./scripts/process.sh "${{ github.event.client_payload.input_file }}" "${{ github.event.client_payload.output_file }}"
+
+          # 给 input/output 加上默认值（workflow 和 dispatch 都支持）
+          INPUT_FILE="${{ github.event.inputs.input_file || github.event.client_payload.input_file || 'test.mp4' }}"
+          OUTPUT_FILE="${{ github.event.inputs.output_file || github.event.client_payload.output_file || 'output.mp4' }}"
+
+          echo "🎬 Using input: $INPUT_FILE"
+          echo "💾 Using output: $OUTPUT_FILE"
+
+          ./scripts/process.sh "$INPUT_FILE" "$OUTPUT_FILE"
 
       - name: Upload processed video
         uses: actions/upload-artifact@v4
         with:
           name: processed-video
-          path: ${{ github.event.client_payload.output_file }}
+          path: ${{ github.event.inputs.output_file || github.event.client_payload.output_file || 'output.mp4' }}
